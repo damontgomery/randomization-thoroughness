@@ -3,6 +3,9 @@ const numberOfSamples = 10000
 const numberOfSuits = 4
 const numberOfRanks = 13
 const numberOfPlayers = 4
+// Add a way to control accuracy of the riffle shuffle.
+// A value of 1 means perfect interleaving, 0 means no interleaving.
+let riffleAccuracy = 0.8
 
 type Card = {
   suit: number
@@ -48,6 +51,34 @@ const shuffleRiffleApproximation: ShuffleFunction = (deck: Deck): Deck => {
   return deck
 }
 
+const shuffleRiffleApproximationWithAccuracy: ShuffleFunction = (deck): Deck => {
+  const halfA = deck.slice(0, Math.floor(deck.length / 2));
+  const halfB = deck.slice(Math.floor(deck.length / 2));
+
+  // If you simulate a perfect riffle shuffle, you should return the deck after 8 shuffles. Starting with A seems to work.
+  let shouldTakeFromA = true
+
+  for (let i = 0; i < deck.length; i++) {
+    if (halfA.length === 0) {
+      deck[i] = halfB.shift()!
+      continue
+    }
+
+    if (halfB.length === 0) {
+      deck[i] = halfA.shift()!
+      continue
+    }
+
+    deck[i] = shouldTakeFromA ? halfA.shift()! : halfB.shift()!
+
+    if (Math.random() < riffleAccuracy) {
+      shouldTakeFromA = !shouldTakeFromA
+    }
+  }
+
+  return deck
+}
+
 type PlayerHand = Card[]
 type PlayerHands = PlayerHand[]
 
@@ -70,21 +101,35 @@ const sortHands = (hands: PlayerHands): PlayerHands => hands.map(hand =>
     })
   )
 
+const shuffle = (
+  { shufflingFunction,
+    shuffleCount,
+  }: {
+    shufflingFunction: ShuffleFunction;
+    shuffleCount: number;
+  }): Deck => {
+    let shuffledDeck: Deck = createOrderedDeck()
+
+    for (let i = 0; i < shuffleCount; i++) {
+      shuffledDeck = shufflingFunction(shuffledDeck)
+    }
+
+    return shuffledDeck
+  }
+
+// console.log('Starting Deck', createOrderedDeck())
+// console.log('After 8 riffle shuffles (accuracy', riffleAccuracy, ')', shuffle({
+//   shufflingFunction: shuffleRiffleApproximationWithAccuracy,
+//   shuffleCount: 8,
+// }))
+
 const simulateShufflingAndDealing = (
   { shufflingFunction,
     shuffleCount,
   }: {
     shufflingFunction: ShuffleFunction;
     shuffleCount: number;
-  }): PlayerHands => {
-    let shuffledDeck: Deck = createOrderedDeck()
-
-    for (let i = 0; i < shuffleCount; i++) {
-      shuffledDeck = shufflingFunction(shuffledDeck)
-    }
-    
-    return sortHands(dealCards(shuffledDeck))
-}
+  }): PlayerHands => sortHands(dealCards(shuffle({ shufflingFunction, shuffleCount })))
 
 type HandDistributionSummary = Map<number, number>
 
@@ -136,69 +181,52 @@ const printSummaryTable = () => {
         shufflingFunction: shuffleTrulyRandom,
         shuffleCount: 1,
       }),
-    },
-    {
-      name: 'Riffle(1)',
-      result: runTest({
-        shufflingFunction: shuffleRiffleApproximation,
-        shuffleCount: 1,
-      }),
-    },
-    {
-      name: 'Riffle(2)',
-      result: runTest({
-        shufflingFunction: shuffleRiffleApproximation,
-        shuffleCount: 2,
-      }),
-    },
-    {
-      name: 'Riffle(3)',
-      result: runTest({
-        shufflingFunction: shuffleRiffleApproximation,
-        shuffleCount: 3,
-      }),
-    },
-    {
-      name: 'Riffle(4)',
-      result: runTest({
-        shufflingFunction: shuffleRiffleApproximation,
-        shuffleCount: 4,
-      }),
-    },
-    {
-      name: 'Riffle(5)',
-      result: runTest({
-        shufflingFunction: shuffleRiffleApproximation,
-        shuffleCount: 5,
-      }),
-    },
-    {
-      name: 'Riffle(6)',
-      result: runTest({
-        shufflingFunction: shuffleRiffleApproximation,
-        shuffleCount: 6,
-      }),
-    },
-    {
-      name: 'Riffle(7)',
-      result: runTest({
-        shufflingFunction: shuffleRiffleApproximation,
-        shuffleCount: 7,
-      }),
-    },
+    }
   ]
 
-  console.log('Suit Count Distribution Summary (over', numberOfSamples, 'samples):')
-  console.log('Suit Count |', testResults.map(tr => tr.name.padStart(10)).join(' | '))
-  console.log('-'.repeat(10 + testResults.length * 13))
+  // for (let i = 1; i <= 7; i++) {
+  //   testResults.push(
+  //     {
+  //       name: `Riffle (${i})`,
+  //       result: runTest({
+  //         shufflingFunction: shuffleRiffleApproximation,
+  //         shuffleCount: i,
+  //       }),
+  //     }
+  //   )
+  // }
+
+  for (let i = 1; i <= 8; i++) {
+    testResults.push(
+      {
+        name: `Riffle (${i})`,
+        result: runTest({
+          shufflingFunction: shuffleRiffleApproximationWithAccuracy,
+          shuffleCount: i,
+        }),
+      }
+    )
+  }
+
+  const columnWidth = 10
+
+  console.log('Suit Count Distribution Summary (over', numberOfSamples, 'samples with', riffleAccuracy, 'accuracy):')
+  console.log('Suit Count |', testResults.map(tr => tr.name.padStart(columnWidth)).join(' | '))
+  console.log('-'.repeat(10 + testResults.length * (columnWidth + 3)))
 
   for (let suitCount = 0; suitCount <= numberOfRanks; suitCount++) {
     const row = [suitCount.toString().padStart(10)]
     for (const testResult of testResults) {
-      row.push((testResult.result.get(suitCount) ?? 0).toString().padStart(10))
+      const totalHands = numberOfPlayers * numberOfSuits * numberOfSamples
+      const percent = (testResult.result.get(suitCount) ?? 0) / totalHands * 100
+      row.push(percent.toFixed(2).padStart(columnWidth))
     }
     console.log(row.join(' | '))
   }
 }
 
-printSummaryTable()
+for (let accuracy = 1; accuracy >= 0; accuracy -= 0.1) {
+  riffleAccuracy = Math.round(accuracy * 10) / 10
+  console.log('')
+  printSummaryTable()
+}
