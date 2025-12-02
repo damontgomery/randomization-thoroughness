@@ -10,6 +10,7 @@ npm start
 
 # Sample Results
 
+```
 Suit Count Distribution Summary (over 10000 samples with 1 accuracy):
 Suit Count | Random (1) | Riffle (1) | Riffle (2) | Riffle (3) | Riffle (4) | Riffle (5) | Riffle (6) | Riffle (7) | Riffle (8)
 -------------------------------------------------------------------------------------------------------------------------------
@@ -207,3 +208,4 @@ Suit Count | Random (1) | Riffle (1) | Riffle (2) | Riffle (3) | Riffle (4) | Ri
         11 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00
         12 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00
         13 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00 |       0.00
+```
