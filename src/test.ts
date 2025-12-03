@@ -4,24 +4,16 @@ import type { PlayerHands } from "./hand.js"
 import { shuffle, type ShuffleFunction } from "./shuffle.js"
 
 // Some sort of histogram. Could be number of suits, number of ranks, etc.
-type HandDistributionSummary = Map<number, number>
+export type HandDistributionSummary = Map<number, number>
+export type HandSummarizationFunction = (params: {
+  hands: PlayerHands;
+  numberOfSuits: number;
+  numberOfRanks: number;
+}) => HandDistributionSummary
 
-export const summarizeHandSuitDistribution = (
-  { hands, numberOfSuits, numberOfRanks }: {
-    hands: PlayerHands;
-    numberOfSuits: number;
-    numberOfRanks: number;
-}): HandDistributionSummary => {
-  const summary: HandDistributionSummary = new Map(Array.from({ length: numberOfRanks + 1 }, (_, i) => [i, 0]))
-
-  for (const hand of hands) {
-    for (let suit = 0; suit < numberOfSuits; suit++) {
-      const suitCount = hand.filter(card => card.suit === suit).length
-      summary.set(suitCount, (summary.get(suitCount) ?? 0) + 1)
-    }
-  }
-
-  return summary
+export type LabeledTest = {
+  label: string;
+  summary: HandDistributionSummary;
 }
 
 export type TestConfiguration = {
@@ -32,6 +24,7 @@ export type TestConfiguration = {
   shufflingFunction: ShuffleFunction;
   shuffleCount: number;
   atATime?: number;
+  handSummarizationFunction: HandSummarizationFunction;
 }
 
 export const runTest = ({
@@ -42,6 +35,7 @@ export const runTest = ({
   shufflingFunction,
   shuffleCount,
   atATime = 1,
+  handSummarizationFunction,
 }: TestConfiguration): HandDistributionSummary => {
   const aggregateSummary: HandDistributionSummary = new Map(
     Array.from({ length: numberOfRanks + 1 }, (_, i) => [i, 0])
@@ -50,7 +44,7 @@ export const runTest = ({
   const startingDeck = createOrderedDeck({ numberOfSuits, numberOfRanks })
 
   for (let sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
-    const summary = summarizeHandSuitDistribution({
+    const summary = handSummarizationFunction({
       hands: sortHands(
         dealCards({
           deck: shuffle({
@@ -73,3 +67,23 @@ export const runTest = ({
 
   return aggregateSummary
 }
+
+export const summarizeHandSuitDistribution = (
+  { hands, numberOfSuits, numberOfRanks }: {
+    hands: PlayerHands;
+    numberOfSuits: number;
+    numberOfRanks: number;
+}): HandDistributionSummary => {
+  const summary: HandDistributionSummary = new Map(Array.from({ length: numberOfRanks + 1 }, (_, i) => [i, 0]))
+
+  for (const hand of hands) {
+    for (let suit = 0; suit < numberOfSuits; suit++) {
+      const suitCount = hand.filter(card => card.suit === suit).length
+      summary.set(suitCount, (summary.get(suitCount) ?? 0) + 1)
+    }
+  }
+
+  return summary
+}
+
+// @todo summarizeHandRankDistribution, etc.

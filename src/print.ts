@@ -1,51 +1,35 @@
-// const printSummaryTable = () => {
-//   const testResults = [
-//     {
-//       name: 'Random (1)',
-//       result: runTest({
-//         shufflingFunction: shuffleTrulyRandom,
-//         shuffleCount: 1,
-//       }),
-//     }
-//   ]
+import type { LabeledTest } from "./test.js";
 
-//   // for (let i = 1; i <= 7; i++) {
-//   //   testResults.push(
-//   //     {
-//   //       name: `Riffle (${i})`,
-//   //       result: runTest({
-//   //         shufflingFunction: shuffleRiffleApproximation,
-//   //         shuffleCount: i,
-//   //       }),
-//   //     }
-//   //   )
-//   // }
+export const printTestsSummaryTable = ({ countLabel, rows, labeledTests }: {
+  countLabel: string;
+  rows: number;
+  labeledTests: LabeledTest[]
+}): void => {
+  const columnWidth = Math.max(
+    10, 
+    ...labeledTests.map(labeledTest => labeledTest.label.length)
+  )
+  
+  console.log(
+    `${countLabel} |`,
+    labeledTests.map(
+      labeledTest => labeledTest.label.padStart(columnWidth)
+    ).join(' | ')
+  )
 
-//   for (let i = 1; i <= 8; i++) {
-//     testResults.push(
-//       {
-//         name: `Riffle (${i})`,
-//         result: runTest({
-//           shufflingFunction: shuffleRiffleApproximationWithAccuracy,
-//           shuffleCount: i,
-//         }),
-//       }
-//     )
-//   }
+  console.log('-'.repeat(10 + labeledTests.length * (columnWidth + 3)))
 
-//   const columnWidth = 10
+  for (let rowIndex = 0; rowIndex <= rows; rowIndex++) {
+    const row = [rowIndex.toString().padStart(10)]
 
-//   console.log('Suit Count Distribution Summary (over', numberOfSamples, 'samples with', riffleAccuracy, 'accuracy):')
-//   console.log('Suit Count |', testResults.map(tr => tr.name.padStart(columnWidth)).join(' | '))
-//   console.log('-'.repeat(10 + testResults.length * (columnWidth + 3)))
+    for (const labeledTest of labeledTests) {
+      const numberOfObservations = labeledTest.summary.entries().reduce((sum, [, count]) => sum + count, 0)
 
-//   for (let suitCount = 0; suitCount <= numberOfRanks; suitCount++) {
-//     const row = [suitCount.toString().padStart(10)]
-//     for (const testResult of testResults) {
-//       const totalHands = numberOfPlayers * numberOfSuits * numberOfSamples
-//       const percent = (testResult.result.get(suitCount) ?? 0) / totalHands * 100
-//       row.push(percent.toFixed(2).padStart(columnWidth))
-//     }
-//     console.log(row.join(' | '))
-//   }
-// }
+      const percent = (labeledTest.summary.get(rowIndex) ?? 0) / numberOfObservations * 100
+
+      row.push(percent.toFixed(2).padStart(columnWidth))
+    }
+
+    console.log(row.join(' | '))
+  }
+}
