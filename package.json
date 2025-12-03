@@ -2,9 +2,12 @@
   "name": "randomization-thoroughness",
   "version": "1.0.0",
   "description": "Explore how randomization thoroughness affects distributions.",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "npx ts-node src/index.ts"
+    "watch": "tsc --watch",
+    "build" : "tsc",
+    "start": "node ./dist/index.js"
   },
   "author": "",
   "license": "ISC",

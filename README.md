@@ -5,7 +5,8 @@ Exploration of how the thoroughness of randomization (specifically riffle shuffl
 To run
 
 ```
-npm start
+npm run build
+npm run start
 ```
 
 # Sample Results
