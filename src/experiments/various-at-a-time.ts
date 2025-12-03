@@ -48,6 +48,7 @@ for (let atATime = 1; atATime <= 4; atATime += 1) {
   printTestsSummaryTable({
     countLabel: 'Suit Count',
     rows: numberOfRanks,
+    numberOfObservations: numberOfSamples * numberOfPlayers * numberOfSuits,
     labeledTests: tests,
   })
 }

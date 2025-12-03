@@ -23,3 +23,21 @@ export const createOrderedDeck = ({
 
   return deck
 }
+
+export const createRankOrderedDeck = ({
+  numberOfSuits,
+  numberOfRanks,
+}: {
+  numberOfSuits: number
+  numberOfRanks: number
+}): Deck => {
+  const deck: Deck = []
+  
+  for (let rank = 0; rank < numberOfRanks; rank++) {
+    for (let suit = 0; suit < numberOfSuits; suit++) {
+      deck.push({ suit, rank })
+    }
+  }
+
+  return deck
+}

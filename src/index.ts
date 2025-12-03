@@ -60,6 +60,7 @@ for (let accuracy = 1; accuracy >= 0; accuracy -= 0.1) {
   printTestsSummaryTable({
     countLabel: 'Suit Count',
     rows: numberOfRanks,
+    numberOfObservations: numberOfSamples * numberOfPlayers * numberOfSuits,
     labeledTests: tests,
   })
 }

@@ -1,12 +1,19 @@
 import type { LabeledTest } from "./test.js";
 
-export const printTestsSummaryTable = ({ countLabel, rows, labeledTests }: {
+export const printTestsSummaryTable = ({
+  countLabel,
+  rows,
+  // Sometimes we want a percent of hands and sometimes a percent of suits, etc. So, we let the caller provide this.
+  numberOfObservations,
+  labeledTests
+}: {
   countLabel: string;
   rows: number;
+  numberOfObservations: number;
   labeledTests: LabeledTest[]
 }): void => {
   const columnWidth = Math.max(
-    10, 
+    countLabel.length, 
     ...labeledTests.map(labeledTest => labeledTest.label.length)
   )
   
@@ -17,14 +24,12 @@ export const printTestsSummaryTable = ({ countLabel, rows, labeledTests }: {
     ).join(' | ')
   )
 
-  console.log('-'.repeat(10 + labeledTests.length * (columnWidth + 3)))
+  console.log('-'.repeat(countLabel.length + labeledTests.length * (columnWidth + 3)))
 
   for (let rowIndex = 0; rowIndex <= rows; rowIndex++) {
-    const row = [rowIndex.toString().padStart(10)]
+    const row = [rowIndex.toString().padStart(countLabel.length)]
 
     for (const labeledTest of labeledTests) {
-      const numberOfObservations = labeledTest.summary.entries().reduce((sum, [, count]) => sum + count, 0)
-
       const percent = (labeledTest.summary.get(rowIndex) ?? 0) / numberOfObservations * 100
 
       row.push(percent.toFixed(2).padStart(columnWidth))
